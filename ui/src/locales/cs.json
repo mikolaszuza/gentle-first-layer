@@ -5,6 +5,7 @@
   "gentle-first-layer.switch": "Šetrná první vrstva",
   "gentle-first-layer.what": "Během první vrstvy rychlost {speed} % a podložka o {bed} °C teplejší. Potom se podložka vrátí a rychlost během {layers} vrstev vystoupá zpět na 100 %. Funguje s G-kódem z jakéhokoli sliceru.",
   "gentle-first-layer.speed": "Rychlost první vrstvy",
+  "gentle-first-layer.speed_low": "Pomaleji, než dovolí displej tiskárny (ten končí na {menu} %). Funguje to, ale je to potřeba jen výjimečně.",
   "gentle-first-layer.bed": "Podložka teplejší o",
   "gentle-first-layer.ramp": "Zpět na plnou rychlost během",
   "gentle-first-layer.layers": "vrstev",

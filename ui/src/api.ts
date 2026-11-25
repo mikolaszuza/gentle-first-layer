@@ -35,7 +35,7 @@ export interface Printer {
 
 /** The bounds the process holds settings to. */
 export const BOUNDS = {
-  speed: { min: 20, max: 100 },
+  speed: { min: 30, max: 100 },
   bed_offset: { min: 0, max: 15 },
   ramp_layers: { min: 1, max: 10 },
 } as const;

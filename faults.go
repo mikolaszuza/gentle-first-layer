@@ -34,7 +34,7 @@ var (
 	// BadSettings is a printer's settings that cannot be saved as sent.
 	BadSettings = fault.Register(faultDomain, "BAD_SETTINGS", http.StatusBadRequest, fault.Document(
 		"Those settings cannot be saved",
-		"Send {\"enabled\": true, \"speed\": 60, \"bed_offset\": 5, \"ramp_layers\": 3}: the speed is 20 to 100 %, the bed 0 to 15 °C warmer, and the speed climbs back over 1 to 10 layers.",
+		"Send {\"enabled\": true, \"speed\": 60, \"bed_offset\": 5, \"ramp_layers\": 3}: the speed is 30 to 100 %, the bed 0 to 15 °C warmer, and the speed climbs back over 1 to 10 layers.",
 		fault.RetryNever,
 		fault.ShowDetail,
 	))

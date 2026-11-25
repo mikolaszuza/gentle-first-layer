@@ -29,7 +29,7 @@ type PrinterSettings struct {
 // The bounds a person may choose within, and the defaults: what a person who
 // does this by hand in the Tune menu tends to pick.
 const (
-	minSpeed, maxSpeed, defaultSpeed = 20, 100, 60
+	minSpeed, maxSpeed, defaultSpeed = 30, 100, 60
 	maxBedOffset, defaultBedOffset   = 15, 5
 	minRamp, maxRamp, defaultRamp    = 1, 10, 3
 )

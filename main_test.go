@@ -222,7 +222,7 @@ func TestSettingsOutOfBoundsAreRefused(t *testing.T) {
 	a, _ := newTestApp(t, newFleet())
 
 	for _, body := range []string{
-		`{"enabled": true, "speed": 10, "bed_offset": 5, "ramp_layers": 3}`,
+		`{"enabled": true, "speed": 25, "bed_offset": 5, "ramp_layers": 3}`,
 		`{"enabled": true, "speed": 60, "bed_offset": 30, "ramp_layers": 3}`,
 		`{"enabled": true, "speed": 60, "bed_offset": 5, "ramp_layers": 0}`,
 		`{"enabled": true, "speed": 60, "bed_offset": 5, "ramp_layers": 3, "nozzle": 9}`,

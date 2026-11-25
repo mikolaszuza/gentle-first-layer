@@ -33,7 +33,7 @@ import (
 
 const (
 	name    = "gentle-first-layer"
-	release = extension.Version("0.1.0")
+	release = extension.Version("0.1.1")
 )
 
 //go:embed openapi.json

@@ -38,20 +38,29 @@
       });
   });
 
+  /** The lowest speed the printer's own Tune menu offers. */
+  const TUNE_MENU_MIN = 50;
+
   const printer = $derived(printerOf(deviceId));
   const settings = $derived(printer?.settings);
   const status = $derived(printer?.status);
+  const lowSpeed = $derived((settings?.speed ?? 100) < TUNE_MENU_MIN);
 
   let busy = $state(false);
   let loadFailed = $state(false);
   let problem: string | undefined = $state();
 
   const save = async (next: Settings): Promise<void> => {
+    const before = printer;
     busy = true;
     problem = undefined;
+    // Shown at once, so the slider's colour follows the release at once; the
+    // server's answer replaces it, a refusal puts back what was there.
+    if (before) putPrinter(deviceId, { ...before, settings: next });
     try {
       putPrinter(deviceId, await savePrinter(host, deviceId, next));
     } catch {
+      if (before) putPrinter(deviceId, before);
       problem = t('gentle-first-layer.error.save');
     } finally {
       busy = false;
@@ -183,7 +192,12 @@
 
     {#if settings.enabled}
       <div class="grid gap-3 sm:grid-cols-3">
-        <div class="flex flex-col gap-1">
+        <!-- Below what the printer's own Tune menu offers, the slider takes
+             the warning colour: it works, but it is not a usual setting. -->
+        <div
+          class="flex flex-col gap-1"
+          style={lowSpeed ? '--control-on: var(--warning)' : undefined}
+        >
           <span class="text-xs text-muted-foreground">
             {t('gentle-first-layer.speed')}
           </span>
@@ -197,6 +211,11 @@
             disabled={busy}
             onCommit={(v: number) => change('speed', v)}
           />
+          {#if lowSpeed}
+            <span class="text-xs text-warning-text">
+              {t('gentle-first-layer.speed_low', { menu: TUNE_MENU_MIN })}
+            </span>
+          {/if}
         </div>
         <div class="flex flex-col gap-1">
           <span class="text-xs text-muted-foreground">

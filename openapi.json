@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "gentle-first-layer",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "The routes gentle-first-layer serves. Every path is relative to the mount the host assigns, and the host serves this document rebased under it at <mount>/openapi.json."
   },
   "paths": {
@@ -171,7 +171,7 @@
           },
           "speed": {
             "type": "integer",
-            "minimum": 20,
+            "minimum": 30,
             "maximum": 100,
             "description": "The first layer's speed, in percent of the print's own."
           },

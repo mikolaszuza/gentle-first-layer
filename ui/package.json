@@ -1,6 +1,6 @@
 {
   "name": "gentle-first-layer-ui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "The browser half of the gentle-first-layer module: the switch on each printer's page.",
   "type": "module",
