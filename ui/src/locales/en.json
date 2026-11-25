@@ -5,7 +5,6 @@
   "gentle-first-layer.switch": "Gentle first layer",
   "gentle-first-layer.what": "While the first layer prints, speed {speed} % and the bed {bed} °C warmer. Then the bed goes back and the speed climbs back to 100 % over {layers} layers. Works with any slicer.",
   "gentle-first-layer.speed": "First layer speed",
-  "gentle-first-layer.speed_low": "Slower than the printer's screen allows (it stops at {menu} %). It works, but is rarely needed.",
   "gentle-first-layer.bed": "Bed warmer by",
   "gentle-first-layer.ramp": "Back to full speed over",
   "gentle-first-layer.layers": "layers",

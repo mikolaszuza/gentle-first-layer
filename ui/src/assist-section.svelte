@@ -211,11 +211,6 @@
             disabled={busy}
             onCommit={(v: number) => change('speed', v)}
           />
-          {#if lowSpeed}
-            <span class="text-xs text-warning-text">
-              {t('gentle-first-layer.speed_low', { menu: TUNE_MENU_MIN })}
-            </span>
-          {/if}
         </div>
         <div class="flex flex-col gap-1">
           <span class="text-xs text-muted-foreground">

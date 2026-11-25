@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- The note under a speed below 50 % is gone. The slider still turns yellow there.
+
 ## 0.1.1
 
 - The first layer's speed goes down to 30 %. Below 50 %, which is as low as the printer's screen goes, the slider turns yellow and says it is rarely needed.

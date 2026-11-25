@@ -12,7 +12,7 @@
 
 name: gentle-first-layer
 kind: sink
-version: 0.1.1
+version: 0.1.2
 license: MIT
 title: Gentle First Layer
 summary: Slows the first layer down and warms the bed a few degrees, then brings both back, as you would in the printer's Tune menu. Works with any slicer.
