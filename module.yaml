@@ -1,0 +1,55 @@
+# Gentle First Layer: what you do by hand in the printer's Tune menu, done
+# for you. While a print's first layer goes down, the speed drops and the bed
+# goes a few degrees warmer. Then the bed goes back and the speed climbs back
+# up over the next few layers.
+#
+# It reads only what the printer reports (its state, the nozzle's height, the
+# speed and the temperatures), so it works with G-code from any slicer.
+#
+# The namespace is derived by the host from the Go module path in go.mod
+# (github.com/mikolaszuza/gentle-first-layer -> com.github.aux.mikolaszuza.gentle-first-layer).
+# It never changes after the first release.
+
+name: gentle-first-layer
+kind: sink
+version: 0.1.0
+license: MIT
+title: Gentle First Layer
+summary: Slows the first layer down and warms the bed a few degrees, then brings both back, as you would in the printer's Tune menu. Works with any slicer.
+codeowner: mikolaszuza
+contract_major: 1
+openapi: openapi.json
+platforms:
+  - linux_amd64
+  - linux_arm64
+  - darwin_arm64
+  - windows_amd64
+
+require:
+  core: ">=0.1.0-beta.1"
+
+# One writable directory, for settings.json: which printers the assist helps,
+# and how gently.
+needs:
+  data: true
+
+# What the process does as itself, with nobody signed in behind it:
+permissions:
+  # Read each printer's state every few seconds: its height, speed and
+  # temperatures.
+  - observe
+  # Set the speed and the bed temperature, as the Tune menu does. The install
+  # grants this on no printer: switching the assist on for a printer on its
+  # page grants it on that printer, and switching it off takes it back.
+  - operate
+
+ui:
+  entry: ui/index.js
+  library: ">=0.0.1 <1.0.0"
+  contributes:
+    device_section:
+      - id: assist
+        title: Gentle first layer
+    device_card:
+      - id: assist-line
+        title: Gentle first layer

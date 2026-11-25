@@ -1,0 +1,262 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "gentle-first-layer",
+    "version": "0.1.0",
+    "description": "The routes gentle-first-layer serves. Every path is relative to the mount the host assigns, and the host serves this document rebased under it at <mount>/openapi.json."
+  },
+  "paths": {
+    "/printers": {
+      "get": {
+        "operationId": "list-printers",
+        "summary": "Every printer's settings and what the assist is doing on it",
+        "description": "One entry for each printer the caller may see, keyed by the printer's id. A printer nobody set up reads as switched off with the default settings.",
+        "responses": {
+          "200": {
+            "description": "The printers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "printers"
+                  ],
+                  "properties": {
+                    "printers": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "#/components/schemas/Printer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "502": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/printers/{id}": {
+      "get": {
+        "operationId": "read-printer",
+        "summary": "One printer's settings and what the assist is doing on it",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The printer's id."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The printer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Printer"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "502": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "The printer's settings, or the defaults switched off for a printer nobody set up, and where the assist is in its current print. A printer the caller may not see answers 404."
+      },
+      "put": {
+        "operationId": "set-printer",
+        "summary": "Change one printer's settings",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The printer's id."
+          }
+        ],
+        "description": "Replaces the printer's settings. Switching the assist on here does not let it operate the printer: the page also grants the module the operator role on the printer.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Settings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The printer after the change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Printer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "502": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Problem": {
+        "description": "A refusal with this module's code.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Settings": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "speed",
+          "bed_offset",
+          "ramp_layers"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the assist helps this printer's prints."
+          },
+          "speed": {
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 100,
+            "description": "The first layer's speed, in percent of the print's own."
+          },
+          "bed_offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15,
+            "description": "How many °C warmer the bed is during the first layer."
+          },
+          "ramp_layers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Over how many layers after the first the speed climbs back."
+          }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "required": [
+          "phase"
+        ],
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "waiting",
+              "first_layer",
+              "ramping",
+              "done",
+              "skipped"
+            ],
+            "description": "Where the assist is in the current print."
+          },
+          "layer": {
+            "type": "integer",
+            "description": "The layer the assist counts, from 1 once the first layer started."
+          },
+          "speed": {
+            "type": "integer",
+            "description": "The speed the assist set last, in percent, while it holds the speed."
+          },
+          "bed_raised": {
+            "type": "integer",
+            "description": "How many °C the assist has the bed above the print's own target now."
+          },
+          "speed_taken_over": {
+            "type": "boolean",
+            "description": "A person changed the speed, so the assist leaves it alone for the rest of the print."
+          },
+          "bed_taken_over": {
+            "type": "boolean",
+            "description": "A person changed the bed temperature, so the assist leaves it alone for the rest of the print."
+          },
+          "note": {
+            "type": "string",
+            "enum": [
+              "unsupported",
+              "denied",
+              "refused"
+            ],
+            "description": "Why the assist cannot act on this printer, when it cannot."
+          },
+          "reason": {
+            "type": "string",
+            "description": "The printer's or the server's own words for a refusal."
+          }
+        }
+      },
+      "Printer": {
+        "type": "object",
+        "required": [
+          "settings",
+          "status"
+        ],
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/Settings"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          }
+        }
+      }
+    }
+  }
+}
