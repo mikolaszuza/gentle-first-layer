@@ -12,7 +12,7 @@ It reads only what the printer reports about itself (its state, the nozzle's hei
 
 Open a printer's page in Connect. Under **Gentle first layer** on its Status tab, switch it on and choose:
 
-- the first layer's speed (20–100 %),
+- the first layer's speed (30–100 %; below 50 %, which the printer's own Tune menu doesn't go, the slider turns yellow),
 - how much warmer the bed is (0–15 °C),
 - over how many layers the speed comes back (1–10).
 
