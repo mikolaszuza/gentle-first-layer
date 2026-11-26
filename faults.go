@@ -48,6 +48,27 @@ var (
 		"printer",
 	))
 
+	// NotAnOperator is a change asked by someone who may see the printer but
+	// not operate it. The settings decide what the module does to the printer
+	// with the operator role someone else gave it, so changing them takes the
+	// same role.
+	NotAnOperator = fault.Register(faultDomain, "NOT_AN_OPERATOR", http.StatusForbidden, fault.Document(
+		"Only someone who may operate this printer can change how it prints its first layer",
+		"Ask the printer's owner or an administrator for the operator role on the printer. Seeing a printer is not enough to change these settings.",
+		fault.RetryNever,
+		fault.ShowDetail,
+		"printer",
+	))
+
+	// AccessUnanswered is a question about the caller's role the host did not
+	// answer.
+	AccessUnanswered = fault.Register(faultDomain, "ACCESS_UNANSWERED", http.StatusBadGateway, fault.Document(
+		"Whether you may change this printer could not be checked",
+		"Try again in a moment. If it goes on, look at the server log.",
+		fault.RetryAllowed,
+		fault.RedactDetail,
+	))
+
 	// SettingsFileFailed is a settings file the process could not read or replace.
 	SettingsFileFailed = fault.Register(faultDomain, "SETTINGS_FILE_FAILED", http.StatusInternalServerError, fault.Document(
 		"The settings could not be read or saved",

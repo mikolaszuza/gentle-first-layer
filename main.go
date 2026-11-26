@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prusa3d/prusa-connect/sdk/accessapi"
 	"github.com/prusa3d/prusa-connect/sdk/deviceapi"
 	"github.com/prusa3d/prusa-connect/sdk/extension"
 	"github.com/prusa3d/prusa-connect/sdk/routesapi"
@@ -33,7 +34,7 @@ import (
 
 const (
 	name    = "gentle-first-layer"
-	release = extension.Version("0.1.2")
+	release = extension.Version("0.1.3")
 )
 
 //go:embed openapi.json
@@ -76,7 +77,7 @@ func run() error {
 		return fmt.Errorf("build the session: %w", err)
 	}
 
-	a := newApp(slog.New(slog.NewTextHandler(os.Stderr, nil)), deviceapi.NewClient(conn), ctx)
+	a := newApp(slog.New(slog.NewTextHandler(os.Stderr, nil)), deviceapi.NewClient(conn), accessapi.NewClient(conn), ctx)
 	maps.Copy(serves, a.methods())
 
 	fmt.Fprintf(os.Stderr, "%s %s is serving on stdio as pid %d\n", name, release, os.Getpid())
@@ -90,9 +91,10 @@ func run() error {
 
 // app holds what the routes and the loop share.
 type app struct {
-	log   *slog.Logger
-	fleet fleet
-	now   func() time.Time
+	log    *slog.Logger
+	fleet  fleet
+	access access
+	now    func() time.Time
 	// base outlives every call: the loop runs on it.
 	base context.Context //nolint:containedctx // the process's own lifetime, set once.
 
@@ -110,10 +112,17 @@ type fleet interface {
 	Command(ctx context.Context, params deviceapi.CommandParams) (deviceapi.Result, error)
 }
 
-func newApp(log *slog.Logger, f fleet, base context.Context) *app { //nolint:revive // base is the process's lifetime.
+// access is the host's answer to whether one person may do one thing to one
+// printer.
+type access interface {
+	Check(ctx context.Context, params accessapi.CheckParams) (accessapi.Decision, error)
+}
+
+func newApp(log *slog.Logger, f fleet, ac access, base context.Context) *app { //nolint:revive // base is the process's lifetime.
 	return &app{
 		log:      log,
 		fleet:    f,
+		access:   ac,
 		now:      time.Now,
 		base:     base,
 		trackers: map[string]*tracker{},

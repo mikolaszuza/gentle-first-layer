@@ -1,7 +1,10 @@
 // The routes the page calls. The host decides who may call them before a
 // request reaches this process: a GET needs view_resource on the instance, a
 // PUT needs operate_resource. Each route then reads the printer as the person
-// calling, so a person sees and changes only the printers they may see.
+// calling, so a person sees only the printers they may see. A change also
+// needs the operate action on the printer itself: the settings decide what
+// the module does to the printer with the operator role it was given, so
+// someone who may only look at the printer must not steer that role.
 package main
 
 import (
@@ -11,6 +14,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/prusa3d/prusa-connect/sdk/accessapi"
 	"github.com/prusa3d/prusa-connect/sdk/deviceapi"
 	"github.com/prusa3d/prusa-connect/sdk/fault"
 	"github.com/prusa3d/prusa-connect/sdk/routesapi"
@@ -69,6 +73,10 @@ func (a *app) routes() http.Handler {
 	}))
 
 	mux.HandleFunc("PUT /printers/{id}", a.withPrinter(func(w http.ResponseWriter, r *http.Request, f *settingsFile, id string) {
+		if !a.mayOperate(w, r, id) {
+			return
+		}
+
 		var s PrinterSettings
 
 		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxSettingsBytes))
@@ -144,6 +152,35 @@ func (a *app) withPrinter(handle func(http.ResponseWriter, *http.Request, *setti
 		}
 	})
 }
+
+// mayOperate asks the host whether the caller may operate the printer, and
+// refuses the request when not. The module's own operate permission lets it
+// ask this without a checks entry in module.yaml.
+func (a *app) mayOperate(w http.ResponseWriter, r *http.Request, id string) bool {
+	decision, err := a.access.Check(r.Context(), accessapi.CheckParams{
+		Subject: routesapi.PrincipalOf(r), Action: actionOperate, ObjectType: "device", ObjectID: id,
+	})
+
+	switch {
+	case err != nil:
+		fmt.Fprintf(os.Stderr, "%s: %s %s: %v\n", name, r.Method, r.URL.Path, err)
+		refuse(w, r, AccessUnanswered.New(err.Error()))
+
+		return false
+	case !decision.Allowed:
+		refuse(w, r, NotAnOperator.
+			New("you may see printer "+id+" but not operate it").
+			With(fault.StringParam("printer", id)))
+
+		return false
+	}
+
+	return true
+}
+
+// actionOperate is the action of the authorization vocabulary that changing a
+// printer's settings takes.
+const actionOperate = "operate"
 
 func answer(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")

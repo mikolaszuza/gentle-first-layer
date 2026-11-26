@@ -12,7 +12,7 @@
 
 name: gentle-first-layer
 kind: sink
-version: 0.1.2
+version: 0.1.3
 license: MIT
 title: Gentle First Layer
 summary: Slows the first layer down and warms the bed a few degrees, then brings both back, as you would in the printer's Tune menu. Works with any slicer.
@@ -41,6 +41,9 @@ permissions:
   # Set the speed and the bed temperature, as the Tune menu does. The install
   # grants this on no printer: switching the assist on for a printer on its
   # page grants it on that printer, and switching it off takes it back.
+  # Holding it also lets the module ask the host whether the person changing
+  # a printer's settings may operate that printer, so no checks entry is
+  # needed (and the manifest may not name operate under both).
   - operate
 
 ui:

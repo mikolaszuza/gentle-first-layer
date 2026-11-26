@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/prusa3d/prusa-connect/sdk/accessapi"
 	"github.com/prusa3d/prusa-connect/sdk/deviceapi"
 	"github.com/prusa3d/prusa-connect/sdk/routesapi"
 	"github.com/prusa3d/prusa-connect/sdk/wirerpc"
@@ -87,11 +88,31 @@ func newFleet() *fakeFleet {
 	return f
 }
 
+// fakeAccess answers that everyone may operate every printer, except the
+// person "user:viewer", who may only see them.
+type fakeAccess struct {
+	mu    sync.Mutex
+	asked []accessapi.CheckParams
+	fail  error
+}
+
+func (f *fakeAccess) Check(_ context.Context, p accessapi.CheckParams) (accessapi.Decision, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	f.asked = append(f.asked, p)
+	if f.fail != nil {
+		return accessapi.Decision{}, f.fail
+	}
+
+	return accessapi.Decision{Allowed: p.Subject != "user:viewer"}, nil
+}
+
 func newTestApp(t *testing.T, f fleet) (*app, *time.Time) {
 	t.Helper()
 
 	now := time.Date(2026, 11, 25, 10, 0, 0, 0, time.UTC)
-	a := newApp(slog.New(slog.NewTextHandler(io.Discard, nil)), f, t.Context())
+	a := newApp(slog.New(slog.NewTextHandler(io.Discard, nil)), f, &fakeAccess{}, t.Context())
 	a.now = func() time.Time { return now }
 	a.file = &settingsFile{dir: t.TempDir()}
 	a.started = true
@@ -247,6 +268,50 @@ func TestAPrinterYouMayNotSeeDoesNotExist(t *testing.T) {
 	_, body := call(t, a, http.MethodGet, "/printers", "user:stranger", "")
 	if printers := body["printers"].(map[string]any); len(printers) != 0 {
 		t.Fatalf("a stranger's list holds %v", printers)
+	}
+}
+
+func TestOnlySomeoneWhoMayOperateThePrinterChangesItsSettings(t *testing.T) {
+	a, _ := newTestApp(t, newFleet())
+	asked := a.access.(*fakeAccess)
+
+	// The viewer sees the printer, so it is not a 404, but may not change it.
+	code, body := call(t, a, http.MethodPut, "/printers/printer-1", "user:viewer",
+		`{"enabled": true, "speed": 30, "bed_offset": 15, "ramp_layers": 1}`)
+	if code != http.StatusForbidden {
+		t.Fatalf("a viewer's change answered %d %v, want 403", code, body)
+	}
+
+	if len(asked.asked) != 1 || asked.asked[0] != (accessapi.CheckParams{
+		Subject: "user:viewer", Action: "operate", ObjectType: "device", ObjectID: "printer-1",
+	}) {
+		t.Fatalf("the module asked %+v, want whether the viewer may operate printer-1", asked.asked)
+	}
+
+	_, body = call(t, a, http.MethodGet, "/printers/printer-1", "user:viewer", "")
+	if s := body["settings"].(map[string]any); s["enabled"] != false || s["speed"] != float64(defaultSpeed) {
+		t.Fatalf("after the refused change the printer reads %v, want it unchanged", s)
+	}
+
+	// Reading stays open to a viewer: only a change takes the operator role.
+	if code, _ = call(t, a, http.MethodGet, "/printers", "user:viewer", ""); code != http.StatusOK {
+		t.Fatalf("a viewer's list answered %d, want 200", code)
+	}
+}
+
+func TestAChangeIsRefusedWhenTheHostCannotSayWhoMayMakeIt(t *testing.T) {
+	a, _ := newTestApp(t, newFleet())
+	a.access.(*fakeAccess).fail = accessapi.ErrUnknownSubject
+
+	code, _ := call(t, a, http.MethodPut, "/printers/printer-1", "user:alice",
+		`{"enabled": true, "speed": 60, "bed_offset": 5, "ramp_layers": 3}`)
+	if code != http.StatusBadGateway {
+		t.Fatalf("a change the host could not check answered %d, want 502", code)
+	}
+
+	_, body := call(t, a, http.MethodGet, "/printers/printer-1", "user:alice", "")
+	if s := body["settings"].(map[string]any); s["enabled"] != false {
+		t.Fatalf("an unchecked change was saved: %v", s)
 	}
 }
 

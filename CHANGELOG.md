@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3
+
+- Changing a printer's settings now takes the operator role on that printer, not only seeing it. Someone who may only look at a printer can no longer change the speed or the bed the assist applies with the role someone else gave it. The module asks the host with `access.check` (operate on the device) before it saves, and refuses with `NOT_AN_OPERATOR` (403).
+- Switching the assist off through the API: a module has no way to withdraw a grant itself, so the API description now says a client should withdraw the operator grant as the page does. A grant left behind does nothing while the assist is off, and switching it back on takes the operator role.
+
 ## 0.1.2
 
 - The note under a speed below 50 % is gone. The slider still turns yellow there.

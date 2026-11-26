@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "gentle-first-layer",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "The routes gentle-first-layer serves. Every path is relative to the mount the host assigns, and the host serves this document rebased under it at <mount>/openapi.json."
   },
   "paths": {
@@ -100,7 +100,7 @@
             "description": "The printer's id."
           }
         ],
-        "description": "Replaces the printer's settings. Switching the assist on here does not let it operate the printer: the page also grants the module the operator role on the printer.",
+        "description": "Replaces the printer's settings. The caller must be allowed to operate the printer itself, not only to see it: the settings decide what the module does to the printer with the operator role it holds, so a person without that role is refused with 403 and nothing is saved. Switching the assist on here does not let it operate the printer: the page also grants the module the operator role on the printer (POST /api/v1/grants/device/{id}). Switching it off here stops the module acting on the printer at once, but a module cannot withdraw a grant itself, so a client that switches it off should also withdraw that grant (DELETE /api/v1/grants/device/{id}), as the page does. A grant left behind does nothing while the assist is off, and switching it back on again takes the operator role on the printer.",
         "requestBody": {
           "required": true,
           "content": {
@@ -123,6 +123,9 @@
             }
           },
           "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
             "$ref": "#/components/responses/Problem"
           },
           "404": {
